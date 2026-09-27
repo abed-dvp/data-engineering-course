@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw
+    database: destination_db
+    schema: public
+    tables:
+      - name: users
+      - name: orders
