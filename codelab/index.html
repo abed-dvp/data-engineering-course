@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Abed Codelab — Data Engineering</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menuButton" class="icon">☰</button>
+  <div class="brand"><span class="logo">A</span><div><strong>Abed Codelab</strong><small>Data Engineering</small></div></div>
+  <div class="actions">
+    <a href="../README.md">README</a>
+    <a href="https://www.youtube.com/watch?v=PHsC_t0j1dU" target="_blank" rel="noreferrer">Video</a>
+    <button id="themeButton" class="icon">◐</button>
+  </div>
+</header>
+<div class="progress-track"><div id="progressBar"></div></div>
+<div class="shell">
+  <aside id="sidebar">
+    <div class="side-head">
+      <div class="eyebrow">COURSE</div>
+      <h2>Data Engineering</h2>
+      <p id="progressText"></p>
+    </div>
+    <nav id="nav"></nav>
+    <button id="resetProgress" class="link-button">Reset progress</button>
+  </aside>
+  <main>
+    <article>
+      <div class="meta"><span id="stepLabel"></span><span class="pill">Concept + Practice</span></div>
+      <h1 id="title"></h1>
+      <p class="lead" id="intro"></p>
+      <section>
+        <h2>Learn</h2>
+        <ul id="learn"></ul>
+      </section>
+      <section class="architecture">
+        <div class="eyebrow">PIPELINE MENTAL MODEL</div>
+        <div class="pipeline">
+          <span>Source</span><b>→</b><span>Ingestion</span><b>→</b><span>Warehouse</span><b>→</b><span>Transform</span><b>→</b><span>Serve</span>
+        </div>
+      </section>
+      <section class="practice">
+        <div class="eyebrow">CHECK YOUR UNDERSTANDING</div>
+        <h2 id="challenge"></h2>
+        <div id="options"></div>
+        <div id="feedback" hidden></div>
+      </section>
+      <section class="takeaway"><div class="eyebrow">KEY TAKEAWAY</div><p id="takeaway"></p></section>
+      <footer>
+        <button id="prev">← Previous</button>
+        <button id="complete" class="success">Mark complete</button>
+        <button id="next" class="primary">Next →</button>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="./steps.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
