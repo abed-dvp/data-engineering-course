@@ -1,0 +1,12 @@
+abed_data_engineering:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5434
+      user: postgres
+      password: secret
+      dbname: destination_db
+      schema: analytics
+      threads: 2
