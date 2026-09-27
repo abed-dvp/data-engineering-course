@@ -1,0 +1,15 @@
+name: "abed_data_engineering"
+version: "1.0.0"
+config-version: 2
+
+profile: "abed_data_engineering"
+
+model-paths: ["models"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  abed_data_engineering:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
