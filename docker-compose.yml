@@ -1,0 +1,65 @@
+services:
+  source_postgres:
+    image: postgres:15
+    container_name: source_postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${SOURCE_DB:-source_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    volumes:
+      - ./source_db_init/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - source_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${SOURCE_DB:-source_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [elt_network]
+
+  destination_postgres:
+    image: postgres:15
+    container_name: destination_postgres
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: ${DESTINATION_DB:-destination_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    volumes:
+      - destination_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${DESTINATION_DB:-destination_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [elt_network]
+
+  elt_script:
+    build:
+      context: ./elt_script
+    container_name: elt_script
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      SOURCE_DB: ${SOURCE_DB:-source_db}
+      DESTINATION_DB: ${DESTINATION_DB:-destination_db}
+      SOURCE_HOST: source_postgres
+      DESTINATION_HOST: destination_postgres
+    depends_on:
+      source_postgres:
+        condition: service_healthy
+      destination_postgres:
+        condition: service_healthy
+    networks: [elt_network]
+
+networks:
+  elt_network:
+    driver: bridge
+
+volumes:
+  source_pgdata:
+  destination_pgdata:
