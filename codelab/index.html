@@ -2,148 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="A complete read-and-practice codelab for the freeCodeCamp Data Engineering Course for Beginners.">
-  <title>Abed Codelab — Complete Data Engineering Course</title>
-  <link rel="stylesheet" href="./styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Abed Codelab: complete step-by-step Data Engineering course with hands-on practice.">
+  <title>Abed Codelab — Data Engineering Course</title>
+  <link rel="stylesheet" href="./styles.css?v=20260928-1">
 </head>
 <body>
-<header class="topbar">
-  <button id="menuButton" class="icon-btn" aria-label="Open course navigation">☰</button>
-  <div class="brand">
-    <span class="logo">A</span>
-    <div><strong>Abed Codelab</strong><small>Complete Data Engineering Lab</small></div>
-  </div>
-  <div class="top-actions">
-    <button id="focusButton" class="ghost-btn" title="Hide navigation for focused reading">Focus</button>
-    <a class="ghost-link" href="../README.md">Repo</a>
-    <a class="ghost-link" href="https://www.youtube.com/watch?v=PHsC_t0j1dU" target="_blank" rel="noreferrer">Video</a>
-    <button id="themeButton" class="icon-btn" aria-label="Toggle theme">◐</button>
-  </div>
-</header>
-<div class="progress-track"><div id="progressBar"></div></div>
-<div class="layout" id="layout">
-  <aside id="sidebar">
-    <div class="side-summary">
-      <div class="eyebrow">SELF-STUDY COURSE</div>
-      <h2>Data Engineering</h2>
-      <p id="progressText"></p>
-      <div class="mini-stats">
-        <span><b id="doneCount">0</b> done</span>
-        <span><b id="totalCount">0</b> lessons</span>
-      </div>
+  <header class="topbar">
+    <button class="menu-button" id="menuButton" aria-label="Open navigation">☰</button>
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div><strong>Abed Codelab</strong><span>Data Engineering Course</span></div>
     </div>
-    <nav id="moduleNav"></nav>
-    <div class="side-footer">
-      <button id="overviewButton" class="text-btn">Course overview</button>
-      <button id="resetProgress" class="text-btn danger-link">Reset progress</button>
+    <div class="topbar-actions">
+      <a href="../README.md" class="ghost-link">README</a>
+      <a href="https://www.youtube.com/watch?v=PHsC_t0j1dU" class="ghost-link" target="_blank" rel="noreferrer">Video</a>
+      <button id="themeButton" class="icon-button" aria-label="Toggle theme">◐</button>
     </div>
-  </aside>
-
-  <main>
-    <section id="overview" class="overview-card" hidden>
-      <div class="eyebrow">COURSE MAP</div>
-      <h1>Learn it. Practice it. Explain it.</h1>
-      <p class="lead">This codelab expands the 3-hour course into a complete self-study path with 45 lessons, executable SQL, code/command exercises, debugging scenarios, hints, solutions, notes, and an interview capstone.</p>
-      <div id="moduleCards" class="module-cards"></div>
-      <div class="study-loop">
-        <strong>Recommended loop</strong>
-        <span>Read → predict → try → check → explain without looking</span>
+  </header>
+  <div class="progress-shell"><div id="progressBar" class="progress-bar"></div></div>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <p class="eyebrow">44 STEPS</p>
+        <h2>Data Engineering 101</h2>
+        <p id="progressText">0 of 44 complete</p>
       </div>
-      <button id="resumeButton" class="primary-btn">Resume course →</button>
-    </section>
+      <nav id="stepNav" class="step-nav"></nav>
+      <div class="sidebar-footer"><button id="resetProgress" class="text-button">Reset progress</button></div>
+    </aside>
+    <main class="main">
+      <article class="lesson-card">
+        <div class="lesson-meta">
+          <span id="stepNumber" class="step-pill"></span>
+          <a id="videoTime" class="time-link" target="_blank" rel="noreferrer"></a>
+        </div>
+        <h1 id="lessonTitle"></h1>
+        <p id="lessonIntro" class="lead"></p>
 
-    <article id="lesson">
-      <div class="lesson-topline">
-        <div class="meta"><span id="moduleLabel" class="pill primary-pill"></span><span id="stepLabel" class="pill"></span><span id="durationLabel" class="pill"></span></div>
-        <button id="markCompleteTop" class="small-complete">Mark complete</button>
-      </div>
-      <h1 id="title"></h1>
-      <p id="intro" class="lead"></p>
+        <section>
+          <h2>Learn</h2>
+          <ul id="learnBullets" class="learn-list"></ul>
+        </section>
 
-      <section class="objectives-panel">
-        <div class="eyebrow">LEARNING OBJECTIVES</div>
-        <ul id="objectives"></ul>
-      </section>
-
-      <section>
-        <div class="section-title"><span class="section-number">01</span><div><div class="eyebrow">READ</div><h2>Core concept</h2></div></div>
-        <div id="theory" class="prose"></div>
-      </section>
-
-      <section class="why-card">
-        <div class="eyebrow">WHY THIS MATTERS</div>
-        <p id="why"></p>
-      </section>
-
-      <section>
-        <div class="section-title"><span class="section-number">02</span><div><div class="eyebrow">SEE IT</div><h2>Example</h2></div></div>
-        <div class="code-shell">
-          <div class="code-head"><span id="codeLanguage">EXAMPLE</span><button id="copyCode" class="text-btn">Copy</button></div>
+        <section>
+          <div class="section-head"><h2>Example</h2><button class="copy-button" data-copy="exampleCode">Copy</button></div>
           <pre><code id="exampleCode"></code></pre>
+          <div class="output-block"><span>What this gives you</span><pre><code id="expectedOutput"></code></pre></div>
+        </section>
+
+        <section class="try-section">
+          <div class="section-head"><div><p class="eyebrow">YOUR TURN</p><h2>Try it</h2></div></div>
+          <p id="challengeText"></p>
+          <div class="runtime-status" id="runtimeStatus">
+            <span class="runtime-dot ready" id="runtimeDot"></span>
+            <span id="runtimeText">Practice checker ready</span>
+          </div>
+          <textarea id="starterCode" spellcheck="false"></textarea>
+          <div class="try-actions">
+            <button id="runCode" class="primary-button">▶ Run / Preview</button>
+            <button id="checkAnswer" class="check-button">✓ Check answer</button>
+            <button id="resetCode" class="secondary-button">Reset</button>
+            <button id="solutionButton" class="secondary-button">Show solution</button>
+          </div>
+          <div class="run-panel">
+            <div class="run-panel-head"><div><span class="terminal-label">RESULT</span><span class="execution-state" id="executionState">Ready</span></div><button id="clearOutput" class="text-button">Clear</button></div>
+            <div id="runOutput" class="result-area">Write your answer, then run or check it.</div>
+            <div id="checkFeedback" class="check-feedback" hidden></div>
+          </div>
+          <div id="solutionPanel" class="solution-panel" hidden>
+            <div class="section-head"><strong>One possible solution</strong><button class="copy-button" data-copy="solutionCode">Copy</button></div>
+            <pre><code id="solutionCode"></code></pre>
+          </div>
+        </section>
+
+        <section class="takeaway"><p class="eyebrow">KEY TAKEAWAY</p><p id="takeawayText"></p></section>
+
+        <div class="lesson-footer">
+          <button id="prevButton" class="secondary-button">← Previous</button>
+          <button id="completeButton" class="complete-button">Mark step complete</button>
+          <button id="nextButton" class="primary-button">Next →</button>
         </div>
-      </section>
-
-      <section>
-        <div class="section-title"><span class="section-number">03</span><div><div class="eyebrow">REASON THROUGH IT</div><h2>Walkthrough</h2></div></div>
-        <ol id="walkthrough" class="walkthrough"></ol>
-      </section>
-
-      <section class="mistake-card">
-        <div class="mistake-icon">!</div>
-        <div><div class="eyebrow">COMMON MISTAKE</div><p id="mistake"></p></div>
-      </section>
-
-      <section class="practice-card">
-        <div class="section-title"><span class="section-number">04</span><div><div class="eyebrow">PRACTICE</div><h2 id="practiceTitle">Check your understanding</h2></div></div>
-        <p id="practicePrompt" class="practice-prompt"></p>
-        <div id="quizOptions" class="quiz-options" hidden></div>
-        <div id="editorWrap" hidden>
-          <div class="editor-head"><span id="editorType">YOUR ANSWER</span><span class="shortcut">Ctrl/⌘ + Enter to check</span></div>
-          <textarea id="answerEditor" spellcheck="false"></textarea>
-          <div id="sqlRuntime" class="runtime" hidden><span id="runtimeDot"></span><span id="runtimeText">Loading SQL runtime…</span></div>
-        </div>
-        <div class="practice-actions">
-          <button id="checkButton" class="primary-btn">Check answer</button>
-          <button id="hintButton" class="secondary-btn">Hint</button>
-          <button id="solutionButton" class="secondary-btn">Solution</button>
-          <button id="resetAnswer" class="secondary-btn">Reset</button>
-        </div>
-        <div id="feedback" class="feedback" hidden></div>
-        <div id="hintPanel" class="reveal-panel" hidden><strong>Hint</strong><p id="hintText"></p></div>
-        <div id="solutionPanel" class="reveal-panel" hidden><strong>One possible solution</strong><pre><code id="solutionCode"></code></pre><p id="solutionExplanation"></p></div>
-        <div id="sqlResult" class="sql-result" hidden></div>
-      </section>
-
-      <section class="takeaway-card">
-        <div class="eyebrow">KEY TAKEAWAY</div>
-        <p id="takeaway"></p>
-      </section>
-
-      <section class="notes-card">
-        <div class="section-head-inline"><div><div class="eyebrow">YOUR NOTES</div><h2>Explain it in your own words</h2></div><span class="autosave">Saved locally</span></div>
-        <textarea id="notes" placeholder="Write the idea as if you were explaining it in an interview…"></textarea>
-      </section>
-
-      <footer class="lesson-footer">
-        <button id="prevButton" class="secondary-btn">← Previous</button>
-        <button id="completeButton" class="complete-btn">Mark lesson complete</button>
-        <button id="nextButton" class="primary-btn">Next →</button>
-      </footer>
-    </article>
-  </main>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
-<script src="./course-base.js"></script>
-<script src="./module-foundation.js"></script>
-<script src="./module-docker.js"></script>
-<script src="./module-sql.js"></script>
-<script src="./module-elt.js"></script>
-<script src="./module-dbt.js"></script>
-<script src="./module-orchestration.js"></script>
-<script src="./module-airbyte.js"></script>
-<script src="./module-capstone.js"></script>
-<script src="./app.js"></script>
+      </article>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
+  <script src="./steps.js?v=20260928-1"></script>
+  <script src="./app.js?v=20260928-1"></script>
 </body>
 </html>
