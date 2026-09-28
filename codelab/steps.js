@@ -51,13 +51,15 @@ window.CODELAB_STEPS = [
     "time": "00:08:00",
     "learn": "docker run starts a container with runtime settings such as name, environment variables, and port mappings.",
     "bullets": [
-      "--name gives the container a readable name.",
-      "-e injects environment variables.",
-      "-p maps host:container ports.",
-      "-d runs in detached mode."
+      "`docker run` creates and starts a new container from an image.",
+      "`--name demo-postgres` gives it a stable human-readable name for later commands.",
+      "`-e POSTGRES_PASSWORD=secret` injects a required environment variable used by the official PostgreSQL image.",
+      "`-p 5433:5432` maps host port 5433 to PostgreSQL port 5432 inside the container.",
+      "`-d` runs detached so your terminal returns immediately.",
+      "`postgres:15` is the image and tag used to create the container."
     ],
     "example": "docker run --name demo-postgres \\\n  -e POSTGRES_PASSWORD=secret \\\n  -p 5433:5432 \\\n  -d postgres:15",
-    "output": "A PostgreSQL container accessible from the host on port 5433.",
+    "output": "The container runs PostgreSQL internally on 5432, while your laptop reaches it on localhost:5433.",
     "challenge": "Write the command to run postgres:15 as my-postgres with password secret and host port 5433.",
     "starter": "docker run ",
     "solution": "docker run --name my-postgres -e POSTGRES_PASSWORD=secret -p 5433:5432 -d postgres:15",
@@ -74,26 +76,26 @@ window.CODELAB_STEPS = [
   {
     "title": "Essential Docker Commands",
     "time": "00:12:00",
-    "learn": "A small set of commands covers most local debugging.",
+    "learn": "These commands are the basic operational toolkit for understanding container state, reading failures, and interacting with a running service.",
     "bullets": [
-      "docker ps -a shows running and stopped containers.",
-      "docker logs shows process output.",
-      "docker exec runs a command inside a running container.",
-      "docker stop/start/rm control lifecycle."
+      "`docker ps` — lists only containers that are currently running. Use it first to confirm whether a service is actually up.",
+      "`docker ps -a` — lists all containers, including stopped and crashed ones. Use it when a container is missing from `docker ps`.",
+      "`docker logs demo-postgres` — shows stdout/stderr from the process inside that container. This is usually your next step after seeing `Exited (...)`.",
+      "`docker stop demo-postgres` — asks the running container to shut down gracefully. The container still exists afterward.",
+      "`docker start demo-postgres` — starts the same existing stopped container again. It does not create a new container.",
+      "`docker rm demo-postgres` — removes the container object. Normally stop it first. Named volumes are separate and may still preserve data.",
+      "`docker exec -it demo-postgres ...` — runs a new command inside an already-running container; useful for shells, psql, and debugging."
     ],
-    "example": "docker ps -a\ndocker logs my-postgres\ndocker exec -it my-postgres psql -U postgres",
-    "output": "Status, logs, and an interactive psql session.",
-    "challenge": "Write the command to open psql inside source_postgres as user postgres.",
-    "starter": "docker ",
-    "solution": "docker exec -it source_postgres psql -U postgres",
-    "takeaway": "Status → logs → exec is your core debugging loop.",
+    "example": "docker ps\n# show running containers\n\ndocker ps -a\n# show running + stopped/exited containers\n\ndocker logs demo-postgres\n# inspect application/database output\n\ndocker stop demo-postgres\n# stop without deleting\n\ndocker start demo-postgres\n# start the same existing container\n\ndocker rm demo-postgres\n# remove the stopped container\n\ndocker exec -it demo-postgres psql -U postgres\n# run psql inside the running container",
+    "output": "A practical debugging loop: check state → read logs → inspect inside the container → stop/start/remove only when needed.",
+    "challenge": "Your container does not appear in `docker ps`. Which command should you run next, and why?",
+    "starter": "",
+    "solution": "Run `docker ps -a` because it also shows stopped and crashed containers. If the container is `Exited`, then inspect the cause with `docker logs <container-name>`.",
+    "takeaway": "Do not memorize Docker commands as a list. Associate each command with the diagnostic question it answers.",
     "type": "text",
     "check": [
-      "docker exec",
-      "-it",
-      "source_postgres",
-      "psql",
-      "-u postgres"
+      "docker ps -a",
+      "docker logs"
     ]
   },
   {
@@ -190,12 +192,16 @@ window.CODELAB_STEPS = [
     "time": "00:28:00",
     "learn": "Docker Compose describes a multi-service application in one YAML file.",
     "bullets": [
-      "Our services are source_postgres, destination_postgres, and elt_script.",
-      "Compose creates a shared network.",
-      "depends_on can coordinate startup order; health checks improve readiness."
+      "`docker compose up --build` reads the Compose file, builds build-based images, creates missing containers/network/volumes, then starts services.",
+      "`docker compose ps` shows the status of services in this Compose project.",
+      "`docker compose logs <service>` shows logs for one service; add `-f` to follow new lines live.",
+      "`docker compose stop` stops services but keeps containers so they can be started again.",
+      "`docker compose down` stops and removes project containers/network but normally preserves named volumes.",
+      "`docker compose down -v` also deletes named volumes, so it resets local database state.",
+      "`docker compose build` builds images without starting services."
     ],
-    "example": "services:\n  source_postgres:\n    image: postgres:15\n  destination_postgres:\n    image: postgres:15\n  elt_script:\n    build: ./elt_script",
-    "output": "One command can start the full local data stack.",
+    "example": "docker compose up --build\n# build + start the stack\n\ndocker compose ps\n# inspect service status\n\ndocker compose logs -f elt_script\n# follow ELT logs live\n\ndocker compose down\n# stop/remove containers, preserve named volumes\n\ndocker compose down -v\n# also delete local DB volumes",
+    "output": "Compose becomes the command surface for operating the full local data stack, not just one container.",
     "challenge": "What command starts and rebuilds the project?",
     "starter": "docker compose ",
     "solution": "docker compose up --build",
@@ -503,12 +509,15 @@ window.CODELAB_STEPS = [
     "time": "01:22:00",
     "learn": "pg_dump creates a logical PostgreSQL dump.",
     "bullets": [
-      "Useful for small full-copy learning pipelines.",
-      "Works well with schema + data.",
-      "Large production systems often need incremental or CDC strategies."
+      "`pg_dump` creates a logical PostgreSQL dump; in this project it is the Extract step.",
+      "`-h source_postgres` selects the database host inside the Compose network.",
+      "`-U postgres` connects as PostgreSQL user `postgres`.",
+      "`-d source_db` selects the source database.",
+      "`-f dump.sql` writes the dump to a file instead of standard output.",
+      "A full dump is simple for learning, but large production systems often need incremental extraction or CDC."
     ],
-    "example": "pg_dump -h source_postgres -U postgres -d source_db -f /tmp/source_dump.sql",
-    "output": "A SQL dump file representing the source database.",
+    "example": "pg_dump \\\n  -h source_postgres \\\n  -U postgres \\\n  -d source_db \\\n  -f /tmp/source_dump.sql",
+    "output": "A logical SQL dump file that can later be replayed into another PostgreSQL database.",
     "challenge": "Write the command to dump source_db to dump.sql.",
     "starter": "pg_dump ",
     "solution": "pg_dump -h source_postgres -U postgres -d source_db -f dump.sql",
@@ -526,12 +535,15 @@ window.CODELAB_STEPS = [
     "time": "01:26:00",
     "learn": "psql executes the dump against the destination database.",
     "bullets": [
-      "ON_ERROR_STOP makes SQL failures surface.",
-      "Destination credentials are provided through environment configuration.",
-      "Validation must happen after loading."
+      "`psql` is PostgreSQL's command-line client; here it executes the dump against the destination.",
+      "`-h destination_postgres` selects the destination host.",
+      "`-U postgres` chooses the database user.",
+      "`-d destination_db` selects the target database.",
+      "`-f dump.sql` executes SQL from the dump file.",
+      "`-v ON_ERROR_STOP=1` makes SQL errors stop the load instead of silently continuing."
     ],
-    "example": "psql -h destination_postgres -U postgres -d destination_db -v ON_ERROR_STOP=1 -f dump.sql",
-    "output": "The dump is replayed into the destination.",
+    "example": "psql \\\n  -h destination_postgres \\\n  -U postgres \\\n  -d destination_db \\\n  -v ON_ERROR_STOP=1 \\\n  -f /tmp/source_dump.sql",
+    "output": "The destination database replays the dump. Any SQL error should fail the load.",
     "challenge": "Why use ON_ERROR_STOP=1?",
     "starter": "Because ...",
     "solution": "Because the load should fail instead of silently continuing after a SQL error.",
@@ -589,12 +601,15 @@ window.CODELAB_STEPS = [
     "time": "01:37:00",
     "learn": "dbt_project.yml defines project behavior; profiles.yml defines database connectivity.",
     "bullets": [
-      "dbt debug checks config and connection.",
-      "Keep real credentials out of Git.",
-      "Profiles can target dev, staging, or prod."
+      "`dbt_project.yml` configures the dbt project itself: project name, model paths, defaults, and the profile name.",
+      "`profiles.yml` contains connection targets such as host, port, user, database, schema, and environment.",
+      "`dbt debug` verifies project/profile configuration and tests database connectivity.",
+      "`dbt run` compiles and executes models in dependency order.",
+      "`dbt test` executes data tests such as `not_null`, `unique`, and `relationships`.",
+      "A useful debugging sequence is: `dbt debug` → `dbt run` → `dbt test`."
     ],
-    "example": "dbt debug\ndbt run\ndbt test",
-    "output": "Validate config, build models, then test them.",
+    "example": "dbt debug\n# Can dbt find the project/profile and connect?\n\ndbt run\n# Build the models\n\ndbt test\n# Validate the data assumptions",
+    "output": "Connect → build → validate.",
     "challenge": "What command should you run first when dbt cannot connect?",
     "starter": "dbt ",
     "solution": "dbt debug",
@@ -689,12 +704,13 @@ window.CODELAB_STEPS = [
     "time": "02:04:11",
     "learn": "Cron schedules commands at fixed times.",
     "bullets": [
-      "Simple and lightweight.",
-      "Great for one or a few independent jobs.",
-      "Limited workflow dependency visibility."
+      "Cron has five scheduling fields before the command: minute, hour, day-of-month, month, day-of-week.",
+      "`0 7 * * *` means minute 0, hour 7, every day of month, every month, every weekday.",
+      "The command after the schedule is what actually runs.",
+      "Cron is appropriate for simple time-based jobs, but it does not naturally provide rich dependency graphs, retries, backfills, or workflow history."
     ],
-    "example": "0 7 * * * /path/to/run_elt.sh",
-    "output": "Run every day at 07:00.",
+    "example": "0 7 * * * /path/to/run_elt.sh\n│ │ │ │ │\n│ │ │ │ └─ day of week: every\n│ │ │ └─── month: every\n│ │ └───── day of month: every\n│ └─────── hour: 7\n└───────── minute: 0",
+    "output": "Run `/path/to/run_elt.sh` every day at 07:00.",
     "challenge": "What does 0 7 * * * mean?",
     "starter": "",
     "solution": "Run at 07:00 every day.",
@@ -710,12 +726,13 @@ window.CODELAB_STEPS = [
     "time": "02:07:54",
     "learn": "Airflow represents workflows as Directed Acyclic Graphs of dependent tasks.",
     "bullets": [
-      "Tasks are nodes.",
-      "Dependencies are edges.",
-      "Downstream tasks should wait for upstream success."
+      "DAG = Directed Acyclic Graph: tasks are nodes and dependencies are directed edges.",
+      "`elt >> dbt_run` means `dbt_run` is downstream of `elt` and should wait for it.",
+      "Airflow schedules and tracks task execution; it does not perform the database transformation itself.",
+      "If an upstream task fails, downstream tasks normally should not run unless trigger rules explicitly say otherwise."
     ],
-    "example": "elt >> dbt_run >> dbt_test",
-    "output": "dbt runs only after ELT succeeds; tests run after models build.",
+    "example": "elt >> dbt_run >> dbt_test\n\n# Read as:\n# 1. run ELT\n# 2. if successful, build dbt models\n# 3. if successful, run dbt tests",
+    "output": "An explicit dependency chain with observable task-level state.",
     "challenge": "Write a dependency chain: extract_load → transform → quality_check.",
     "starter": "extract_load ",
     "solution": "extract_load >> transform >> quality_check",
@@ -732,13 +749,13 @@ window.CODELAB_STEPS = [
     "time": "02:16:00",
     "learn": "Airflow is a system with scheduler, metadata database, web UI, and task execution components.",
     "bullets": [
-      "Scheduler decides what should run.",
-      "Metadata DB stores operational state.",
-      "Webserver exposes the UI.",
-      "Executors/workers run task instances."
+      "Scheduler — decides which task instances are ready to run based on schedules and dependencies.",
+      "Metadata database — stores DAG run, task instance, connection, and other Airflow operational state.",
+      "Webserver/UI — lets you inspect DAGs, task history, logs, and run state.",
+      "Executor/workers — execute the task instances according to the configured execution model."
     ],
-    "example": "Scheduler → tasks\nMetadata DB ↔ Airflow state\nWebserver → UI",
-    "output": "A control plane around scheduled workflows.",
+    "example": "Scheduler → decides what should run\nMetadata DB → stores Airflow state\nWeb UI → inspect DAGs/runs/logs\nExecutor/Workers → execute tasks",
+    "output": "Airflow is a control plane composed of several cooperating services.",
     "challenge": "Which Airflow component decides what tasks should run?",
     "starter": "",
     "solution": "Scheduler",
