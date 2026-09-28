@@ -37,6 +37,24 @@ By the end, you should be able to explain and use:
 
 ---
 
+
+## 🧭 How to Use This as a Self-Study Source
+
+This repository is written so that you should **not need the video open beside it**.
+
+Whenever a command or concept appears, try to answer six questions:
+
+1. **What is it?**
+2. **What does it do?**
+3. **When would I use it?**
+4. **What does each important option mean?**
+5. **What should I expect to see?**
+6. **What is the common mistake or danger?**
+
+The tutorial therefore explains commands rather than only listing them.
+
+---
+
 # Course Map
 
 The original course chapters are:
@@ -102,34 +120,75 @@ The durable skill is designing systems that move, organize, validate, and serve 
 
 # 2. 🐳 Docker — `00:03:14`
 
-Docker is used heavily in this course because it gives us repeatable environments.
+Docker is used in this course to give every learner the **same reproducible environment**.
 
-Instead of saying:
+Without Docker, two people may have:
 
-> Install PostgreSQL version X, Python version Y, these OS packages, these environment variables...
+- different PostgreSQL versions
+- different Python versions
+- different system packages
+- different environment variables
+- different operating-system behavior
 
-we package the runtime.
+With Docker, we package most of that runtime configuration.
+
+---
 
 ## Image vs container
 
 An **image** is a packaged template.
 
-A **container** is a running instance of an image.
+A **container** is a running instance created from an image.
 
-For example:
+Example:
 
 ```text
-postgres:15  → image
-source_postgres → running container created from that image
+postgres:15       → Docker image
+source_postgres   → running container created from postgres:15
 ```
 
-## Pull an image
+One image can create many containers.
+
+A useful analogy:
+
+```text
+Image     = class / blueprint
+Container = instance / running object
+```
+
+The analogy is not technically perfect, but it is useful when you are learning.
+
+---
+
+## `docker pull` — download an image
 
 ```bash
 docker pull postgres:15
 ```
 
-## Run a container
+### What it does
+
+Downloads the `postgres:15` image from a container registry, normally Docker Hub.
+
+### When you use it
+
+Use it when you want the image available locally before creating a container.
+
+Docker can also pull an image automatically when you run a container and the image is missing.
+
+### What to check
+
+After pulling:
+
+```bash
+docker images
+```
+
+You should see a PostgreSQL image in the local image list.
+
+---
+
+## `docker run` — create and start a container
 
 ```bash
 docker run --name demo-postgres \
@@ -138,37 +197,444 @@ docker run --name demo-postgres \
   -d postgres:15
 ```
 
-Important pieces:
+This command does several things at once:
 
-- `--name` → container name
-- `-e` → environment variable
-- `-p 5433:5432` → host port 5433 maps to container port 5432
-- `-d` → detached mode
+1. creates a new container
+2. configures it
+3. starts it
 
-## Useful Docker commands
+### Breaking down the options
+
+#### `--name demo-postgres`
+
+Gives the container a readable name.
+
+Without this, Docker generates a random name.
+
+The name is useful later:
 
 ```bash
-docker ps
-docker ps -a
 docker logs demo-postgres
 docker stop demo-postgres
 docker start demo-postgres
+```
+
+#### `-e POSTGRES_PASSWORD=secret`
+
+Sets an environment variable inside the container.
+
+The official PostgreSQL image reads this variable during initialization.
+
+#### `-p 5433:5432`
+
+Maps:
+
+```text
+host port 5433 → container port 5432
+```
+
+PostgreSQL listens on port `5432` inside the container.
+
+Your laptop can reach it through:
+
+```text
+localhost:5433
+```
+
+#### `-d`
+
+Runs the container in **detached mode**.
+
+That means your terminal returns immediately instead of staying attached to the PostgreSQL process.
+
+#### `postgres:15`
+
+The image used to create the container.
+
+---
+
+# Useful Docker Commands — Explained
+
+These commands form the core Docker debugging workflow.
+
+---
+
+## `docker ps` — show running containers
+
+```bash
+docker ps
+```
+
+### What it does
+
+Lists containers that are **currently running**.
+
+### When to use it
+
+This is usually the first command to run when you ask:
+
+> Is my container actually running?
+
+### Important output columns
+
+You will typically see columns like:
+
+```text
+CONTAINER ID
+IMAGE
+COMMAND
+STATUS
+PORTS
+NAMES
+```
+
+Example:
+
+```text
+CONTAINER ID   IMAGE         STATUS        PORTS                    NAMES
+8a21...        postgres:15   Up 2 minutes  0.0.0.0:5433->5432/tcp  demo-postgres
+```
+
+What matters here:
+
+- `STATUS = Up` → container is running
+- `PORTS` → confirms the host/container port mapping
+- `NAMES` → the name used by other Docker commands
+
+### Common confusion
+
+If a container crashed, it will **not** appear in `docker ps`.
+
+Use `docker ps -a` instead.
+
+---
+
+## `docker ps -a` — show all containers
+
+```bash
+docker ps -a
+```
+
+### What it does
+
+Lists:
+
+- running containers
+- stopped containers
+- containers that exited because of an error
+
+### When to use it
+
+Use this when:
+
+```text
+docker ps
+```
+
+does not show the container you expected.
+
+Example:
+
+```text
+STATUS
+Exited (1) 20 seconds ago
+```
+
+This tells you the process inside the container failed.
+
+The next command should usually be:
+
+```bash
+docker logs <container-name>
+```
+
+---
+
+## `docker logs` — read container output
+
+```bash
+docker logs demo-postgres
+```
+
+### What it does
+
+Shows the container process's standard output and standard error.
+
+In practice, this means:
+
+> show me what the application inside this container has been printing.
+
+### When to use it
+
+Use it when:
+
+- a container exits
+- PostgreSQL does not start
+- your ELT script fails
+- you need to inspect startup messages
+
+### Follow logs live
+
+```bash
+docker logs -f demo-postgres
+```
+
+`-f` means **follow**.
+
+New log lines continue appearing until you stop following with:
+
+```text
+Ctrl + C
+```
+
+This does **not** stop the container. It only stops your log viewer.
+
+### Show only recent lines
+
+```bash
+docker logs --tail 50 demo-postgres
+```
+
+This shows the last 50 lines instead of the entire history.
+
+---
+
+## `docker stop` — stop a running container
+
+```bash
+docker stop demo-postgres
+```
+
+### What it does
+
+Asks the process inside the container to shut down gracefully.
+
+The container still exists afterward.
+
+Check:
+
+```bash
+docker ps -a
+```
+
+You should see it with a stopped/exited status.
+
+### Important
+
+`docker stop` is **not the same as deleting** the container.
+
+You can start it again.
+
+---
+
+## `docker start` — start an existing stopped container
+
+```bash
+docker start demo-postgres
+```
+
+### What it does
+
+Starts the same existing container again.
+
+Its existing container configuration remains:
+
+- name
+- environment variables
+- port mapping
+- attached volumes
+
+### Difference from `docker run`
+
+```text
+docker run   → create a new container + start it
+docker start → start an already-created container
+```
+
+This distinction is important.
+
+---
+
+## `docker restart` — stop and start
+
+```bash
+docker restart demo-postgres
+```
+
+Equivalent conceptually to:
+
+```text
+stop → start
+```
+
+Useful after a configuration-independent temporary problem.
+
+Do not use restart as a substitute for understanding recurring failures.
+
+If it repeatedly crashes:
+
+```bash
+docker logs demo-postgres
+```
+
+and diagnose the cause.
+
+---
+
+## `docker rm` — remove a container
+
+```bash
 docker rm demo-postgres
 ```
 
-Enter a running container:
+### What it does
+
+Deletes the container object.
+
+Normally the container must already be stopped.
+
+### Important distinction
+
+Deleting a container does not necessarily delete data in a **named volume**.
+
+That is one of the reasons we store PostgreSQL state in volumes.
+
+### Force-remove a running container
+
+```bash
+docker rm -f demo-postgres
+```
+
+This forcefully stops and removes it.
+
+Use this carefully.
+
+For normal learning workflows, prefer:
+
+```text
+stop → inspect → remove
+```
+
+---
+
+## `docker exec` — run a command inside a running container
+
+Open a shell:
 
 ```bash
 docker exec -it demo-postgres bash
 ```
 
-Or run PostgreSQL directly inside it:
+### What it does
+
+Runs a **new command inside an already-running container**.
+
+It does not create another container.
+
+### What does `-it` mean?
+
+It combines two options:
+
+- `-i` → interactive input
+- `-t` → allocate a terminal
+
+Together, they make interactive terminal programs practical.
+
+### When to use it
+
+Use it when you want to:
+
+- inspect files
+- test networking
+- run a database client
+- investigate the environment inside the container
+
+---
+
+## Run `psql` directly with `docker exec`
+
+Instead of first entering Bash:
 
 ```bash
 docker exec -it demo-postgres psql -U postgres
 ```
 
+This directly starts PostgreSQL's CLI client inside the container.
+
+Later, when a specific database exists:
+
+```bash
+docker exec -it source_postgres \
+  psql -U postgres -d source_db
+```
+
+Options:
+
+- `-U postgres` → connect as PostgreSQL user `postgres`
+- `-d source_db` → connect to database `source_db`
+
 ---
+
+## `docker inspect` — inspect low-level configuration
+
+```bash
+docker inspect demo-postgres
+```
+
+### What it does
+
+Returns detailed JSON describing the container.
+
+It includes:
+
+- network configuration
+- mounts
+- environment
+- ports
+- image information
+- container state
+
+### When to use it
+
+Use it when a normal status/log check is not enough and you need to verify the actual runtime configuration.
+
+---
+
+## Recommended Docker debugging sequence
+
+When something is wrong, do not randomly rebuild everything.
+
+Use this order:
+
+```text
+1. docker ps -a
+      ↓
+2. docker logs <container>
+      ↓
+3. docker inspect <container>       if configuration is suspicious
+      ↓
+4. docker exec -it <container> ... if you need to inspect/test inside
+```
+
+Example:
+
+```bash
+docker ps -a
+docker logs elt_script
+docker logs source_postgres
+docker exec -it source_postgres psql -U postgres -d source_db
+```
+
+This sequence helps isolate whether the problem is:
+
+- process startup
+- application configuration
+- networking
+- credentials
+- database state
+
+---
+
 
 # 3. 📦 Dockerfile
 
@@ -291,9 +757,9 @@ In this repository:
 
 # 5. 🧩 Docker Compose
 
-Docker Compose describes multiple services together.
+Docker Compose describes a **multi-container application** in one YAML file.
 
-Our project contains:
+Our project has three main services:
 
 ```text
 source_postgres
@@ -301,42 +767,203 @@ destination_postgres
 elt_script
 ```
 
-Start the stack:
+Instead of manually starting each container with a long `docker run` command, Compose stores the configuration in:
+
+```text
+docker-compose.yml
+```
+
+---
+
+## `docker compose up --build`
 
 ```bash
-cp .env.example .env
 docker compose up --build
 ```
 
-Inspect services:
+### What it does
+
+- reads `docker-compose.yml`
+- builds images that use `build:`
+- creates missing containers
+- creates the project network
+- creates/attaches declared volumes
+- starts the services
+- shows combined service logs in your terminal
+
+### Why `--build`?
+
+It tells Compose to rebuild build-based images before starting.
+
+Useful after changing:
+
+- a Dockerfile
+- Python files copied into the image
+- build dependencies
+
+---
+
+## Run in the background
+
+```bash
+docker compose up -d
+```
+
+`-d` means detached mode.
+
+The services continue running after your shell prompt returns.
+
+To see their logs afterward:
+
+```bash
+docker compose logs
+```
+
+---
+
+## `docker compose ps`
 
 ```bash
 docker compose ps
 ```
 
-Read logs:
+### What it does
+
+Shows the status of services belonging to this Compose project.
+
+This is usually clearer than global `docker ps` when you only care about this project.
+
+Use it to check:
+
+- which services are running
+- mapped ports
+- health status
+
+---
+
+## `docker compose logs`
+
+All project logs:
 
 ```bash
-docker compose logs source_postgres
-docker compose logs destination_postgres
+docker compose logs
+```
+
+One service:
+
+```bash
 docker compose logs elt_script
 ```
 
-Stop everything:
+Follow live:
+
+```bash
+docker compose logs -f source_postgres
+```
+
+This is one of the most useful commands when debugging the stack.
+
+---
+
+## `docker compose stop`
+
+```bash
+docker compose stop
+```
+
+Stops services but keeps the containers.
+
+You can start them again with:
+
+```bash
+docker compose start
+```
+
+---
+
+## `docker compose down`
 
 ```bash
 docker compose down
 ```
 
-Remove persistent volumes too:
+Stops and removes the project's containers and default network.
+
+Named volumes are normally preserved.
+
+That means your PostgreSQL data can survive.
+
+---
+
+## `docker compose down -v`
 
 ```bash
 docker compose down -v
 ```
 
-Be careful: `-v` deletes the database data stored in the named volumes.
+This also removes the project's named volumes.
+
+### Why this matters in our project
+
+The PostgreSQL initialization script runs when PostgreSQL initializes a **new data directory**.
+
+So if you changed:
+
+```text
+source_db_init/init.sql
+```
+
+and need a completely clean database:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+### Warning
+
+`-v` deletes the local database state stored in the Compose volumes.
+
+Use it intentionally.
 
 ---
+
+## `docker compose build`
+
+```bash
+docker compose build
+```
+
+Builds images without starting the services.
+
+Useful when you want to isolate:
+
+> Does my Dockerfile build successfully?
+
+from:
+
+> Does my application run successfully?
+
+---
+
+## Quick Compose troubleshooting loop
+
+```bash
+docker compose ps
+docker compose logs elt_script
+docker compose logs source_postgres
+docker compose logs destination_postgres
+```
+
+If the state is badly confused and you intentionally want a fresh learning environment:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+---
+
 
 # 6. 🗄️ SQL & PostgreSQL — `00:30:38`
 
@@ -837,9 +1464,11 @@ instead of assuming a fixed sleep is enough.
 
 ---
 
-# 23. 📤 Extract with pg_dump
+# 23. 📤 Extract with `pg_dump`
 
-Conceptually:
+`pg_dump` is a PostgreSQL command-line tool for creating a **logical backup/dump**.
+
+Our learning pipeline uses it as the Extract step.
 
 ```bash
 pg_dump \
@@ -849,17 +1478,87 @@ pg_dump \
   -f /tmp/source_dump.sql
 ```
 
-`pg_dump` creates a logical database dump.
+## What each option means
 
-This is simple and useful for learning.
+### `-h source_postgres`
 
-For large production systems, full dumps every run may become too expensive.
+Host.
+
+It tells `pg_dump` which PostgreSQL server to connect to.
+
+Inside our Docker Compose network, the hostname is the service name:
+
+```text
+source_postgres
+```
+
+### `-U postgres`
+
+Database user.
+
+Connect as:
+
+```text
+postgres
+```
+
+### `-d source_db`
+
+Database to dump.
+
+### `-f /tmp/source_dump.sql`
+
+Write the dump to this file.
+
+Without `-f`, output can be written to stdout instead.
 
 ---
 
-# 24. 📥 Load with psql
+## What is inside the dump?
 
-Conceptually:
+A logical SQL dump can contain SQL needed to reconstruct:
+
+- tables
+- data
+- sequences
+- constraints
+- other database objects depending on options
+
+It is not a raw copy of PostgreSQL's internal storage files.
+
+---
+
+## Why use `pg_dump` in this course?
+
+Because it gives us a clear, understandable full-copy pipeline:
+
+```text
+source PostgreSQL
+      ↓ pg_dump
+SQL dump file
+```
+
+For small databases and learning, this is excellent.
+
+For very large or frequently changing production data, repeatedly dumping everything may be inefficient.
+
+That is where strategies such as:
+
+- incremental extraction
+- CDC
+- replication
+- managed connectors
+
+become relevant.
+
+---
+
+
+# 24. 📥 Load with `psql`
+
+`psql` is PostgreSQL's command-line client.
+
+In this pipeline we use it to execute the dump against the destination database.
 
 ```bash
 psql \
@@ -870,11 +1569,78 @@ psql \
   -f /tmp/source_dump.sql
 ```
 
-`ON_ERROR_STOP=1` matters.
+## What each option means
 
-If a SQL statement fails, we want the job to fail rather than quietly continue.
+### `-h destination_postgres`
+
+Connect to the destination PostgreSQL service.
+
+### `-U postgres`
+
+Connect as database user `postgres`.
+
+### `-d destination_db`
+
+Run against the destination database.
+
+### `-f /tmp/source_dump.sql`
+
+Read SQL commands from this file.
+
+### `-v ON_ERROR_STOP=1`
+
+Tell `psql` to stop when a SQL error occurs.
+
+This is important in a pipeline.
+
+Without explicit failure behavior, a script could continue after part of the load failed.
+
+We want:
+
+```text
+SQL error
+   ↓
+load fails
+   ↓
+pipeline fails
+   ↓
+investigate
+```
+
+not:
+
+```text
+SQL error
+   ↓
+ignore it
+   ↓
+continue
+   ↓
+report success with incomplete data
+```
 
 ---
+
+## `psql -c` — run one SQL command
+
+Example:
+
+```bash
+psql \
+  -h destination_postgres \
+  -U postgres \
+  -d destination_db \
+  -c "SELECT COUNT(*) FROM orders;"
+```
+
+`-c` means:
+
+> execute this command and exit.
+
+This is useful for automated validation.
+
+---
+
 
 # 25. ✅ Validate the Load
 
@@ -934,23 +1700,129 @@ It transforms data **after loading**.
 
 # 27. 🔌 dbt Profile & Project
 
-`dbt_project.yml` describes the project.
+`dbt_project.yml` describes the dbt project itself.
 
-`profiles.yml` tells dbt how to connect to PostgreSQL.
+Examples of project-level configuration:
 
-Typical workflow:
+- project name
+- model directories
+- materialization defaults
+- profile name
+
+`profiles.yml` tells dbt **where and how to connect**.
+
+Typical connection information includes:
+
+- database type
+- host
+- port
+- username
+- password
+- database name
+- schema
+- target environment
+
+Keep real credentials out of Git.
+
+---
+
+## `dbt debug` — check configuration and connection
+
+```bash
+dbt debug
+```
+
+### What it does
+
+Checks important setup pieces such as:
+
+- whether dbt can find the project
+- whether it can find the configured profile
+- whether connection settings are valid
+- whether it can connect to the destination database
+
+### When to use it
+
+This is usually the **first command** when dbt is not working.
+
+If `dbt debug` cannot connect, changing model SQL probably will not help.
+
+---
+
+## `dbt run` — build models
+
+```bash
+dbt run
+```
+
+### What it does
+
+Compiles and executes dbt models in dependency order.
+
+A SQL model such as:
+
+```text
+models/staging/stg_orders.sql
+```
+
+becomes a database relation according to its materialization, such as:
+
+- view
+- table
+- incremental model
+
+### Important
+
+`dbt run` builds models.
+
+It does **not** automatically mean your data assumptions are valid.
+
+That is why we also run tests.
+
+---
+
+## `dbt test` — validate model assumptions
+
+```bash
+dbt test
+```
+
+Runs configured data tests such as:
+
+- `not_null`
+- `unique`
+- `relationships`
+- other custom/generic tests
+
+Example question:
+
+> Did every `orders.user_id` match an existing user?
+
+A relationships test can validate that.
+
+---
+
+## Useful learning sequence
 
 ```bash
 cd dbt_project
-
 dbt debug
 dbt run
 dbt test
 ```
 
-`dbt debug` is the first command to use when you suspect connection or configuration problems.
+Think of it as:
+
+```text
+Can I connect?
+      ↓
+Can I build?
+      ↓
+Is the resulting data valid?
+```
 
 ---
+
 
 # 28. 🌱 dbt Sources & Staging
 
