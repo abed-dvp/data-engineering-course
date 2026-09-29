@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data Engineering Practical Lab</title>
+<link rel="stylesheet" href="./styles.css?v=practice-1">
+<style>
+.lab-shell{max-width:980px;margin:auto}.lab-hero{margin-bottom:28px}.lab-progress{display:flex;align-items:center;gap:12px;margin:18px 0 28px}.lab-progress-track{flex:1;height:10px;background:var(--surface2);border-radius:999px;overflow:hidden}.lab-progress-bar{height:100%;width:0;background:var(--success);transition:.2s}.lab-step{padding:24px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:var(--shadow);margin:20px 0}.lab-step.done{border-color:var(--success)}.lab-step h2{margin:5px 0 10px}.lab-step p,.lab-step li{line-height:1.75}.lab-step pre{margin:12px 0}.lab-meta{display:flex;justify-content:space-between;align-items:center;gap:12px}.lab-badge{font-size:.72rem;font-weight:800;color:var(--accentStrong);background:var(--accentSoft);padding:5px 9px;border-radius:999px}.lab-check{border:1px solid var(--border);background:var(--surface);color:var(--text);padding:9px 12px;border-radius:9px;cursor:pointer}.lab-check.done{background:var(--success);border-color:var(--success);color:white}.mental{padding:14px 16px;background:var(--accentSoft);border-left:4px solid var(--accent);border-radius:0 10px 10px 0;line-height:1.65}.lab-actions{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.lab-actions a{text-decoration:none}.file-links{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.file-links a{font-size:.82rem;text-decoration:none;color:var(--accentStrong);background:var(--accentSoft);padding:6px 9px;border-radius:8px}.warn{padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px}.lab-step code{font-size:.92em}@media(max-width:850px){.lab-meta{align-items:flex-start}.lab-step{padding:18px}.lab-progress{align-items:flex-start;flex-direction:column}.lab-progress-track{width:100%}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button class="menu-button" id="menuButton" aria-label="Open navigation">☰</button>
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div><strong>Abed Codelab</strong><span>Data Engineering Practical Lab</span></div>
+  </div>
+  <div class="topbar-actions">
+    <a href="./" class="ghost-link">Course</a>
+    <a href="../PRACTICE.md" class="ghost-link">Markdown Lab</a>
+    <a href="https://github.com/abed-dvp/data-engineering-course" class="ghost-link" target="_blank">Repo</a>
+    <button id="themeButton" class="icon-button" aria-label="Toggle theme">◐</button>
+  </div>
+</header>
+
+<main class="main">
+<div class="lab-shell">
+  <div class="lab-hero">
+    <p class="eyebrow">HANDS-ON END-TO-END PRACTICE</p>
+    <h1>Build the Data Pipeline Yourself</h1>
+    <p class="lead">This lab uses the real repository. Run every command on your own machine and mark a step complete only after you understand the result.</p>
+    <div class="lab-progress"><strong id="labProgressText">0 / 20 complete</strong><div class="lab-progress-track"><div id="labProgressBar" class="lab-progress-bar"></div></div></div>
+    <div class="lab-actions">
+      <button id="resetLab" class="secondary-button">Reset lab progress</button>
+      <a class="secondary-button" href="https://github.com/abed-dvp/data-engineering-course" target="_blank">Open repository ↗</a>
+    </div>
+    <div class="warn"><strong>Start here:</strong> open a terminal in the repository root: <code>cd data-engineering-course</code></div>
+  </div>
+
+  <section class="lab-step" data-step="1">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 1</span><h2>Verify Docker</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>docker --version
+docker compose version
+docker run hello-world
+docker ps -a</code></pre>
+    <div class="mental">CLI works → Engine works → image can be pulled → container can run.</div>
+  </section>
+
+  <section class="lab-step" data-step="2">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 2</span><h2>Create your local .env</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links"><a href="https://github.com/abed-dvp/data-engineering-course/blob/main/.env.example" target="_blank">.env.example ↗</a></div>
+    <pre><code># PowerShell
+Copy-Item .env.example .env
+
+# Git Bash / macOS / Linux
+cp .env.example .env
+
+git status</code></pre>
+    <div class="mental">Compose reads configuration from <code>.env</code>; the real local file should stay out of Git.</div>
+  </section>
+
+  <section class="lab-step" data-step="3">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 3</span><h2>Read the architecture before running it</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links"><a href="https://github.com/abed-dvp/data-engineering-course/blob/main/docker-compose.yml" target="_blank">docker-compose.yml ↗</a></div>
+    <pre><code>source_postgres
+      ↓ pg_dump
+elt_script
+      ↓ psql
+destination_postgres
+      ↓ dbt
+analytics models</code></pre>
+    <div class="mental">Host: source=localhost:5433, destination=localhost:5434. Inside Docker: source_postgres:5432 and destination_postgres:5432.</div>
+  </section>
+
+  <section class="lab-step" data-step="4">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 4</span><h2>Start only the two PostgreSQL services</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>docker compose up -d source_postgres destination_postgres
+docker compose ps
+
+docker compose logs source_postgres
+docker compose logs destination_postgres</code></pre>
+    <div class="mental">Start infrastructure first so you can inspect source and destination independently from ELT.</div>
+  </section>
+
+  <section class="lab-step" data-step="5">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 5</span><h2>Explore the source database</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links"><a href="https://github.com/abed-dvp/data-engineering-course/blob/main/source_db_init/init.sql" target="_blank">init.sql ↗</a></div>
+    <pre><code>docker exec -it source_postgres psql -U postgres -d source_db
+
+\dt
+SELECT * FROM users;
+SELECT * FROM orders;
+\q</code></pre>
+    <p>Baseline: <strong>5 users</strong>, <strong>8 orders</strong>.</p>
+  </section>
+
+  <section class="lab-step" data-step="6">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 6</span><h2>Practice SQL on the source</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>SELECT COUNT(*) FROM users;
+SELECT COUNT(*) FROM orders;
+
+SELECT *
+FROM orders
+WHERE status = 'paid';
+
+SELECT
+    user_id,
+    COUNT(*) AS order_count,
+    SUM(amount) AS revenue
+FROM orders
+WHERE status = 'paid'
+GROUP BY user_id
+ORDER BY user_id;</code></pre>
+    <div class="mental">Understand the source before you validate the destination.</div>
+  </section>
+
+  <section class="lab-step" data-step="7">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 7</span><h2>Understand volumes and persistence</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>docker volume ls
+docker compose down
+docker compose up -d source_postgres destination_postgres</code></pre>
+    <div class="mental"><code>down</code> removes containers/network, but named volumes survive. <code>down -v</code> removes the volumes too.</div>
+  </section>
+
+  <section class="lab-step" data-step="8">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 8</span><h2>Read the ELT Dockerfile</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links"><a href="https://github.com/abed-dvp/data-engineering-course/blob/main/elt_script/Dockerfile" target="_blank">ELT Dockerfile ↗</a></div>
+    <pre><code>FROM python:3.11-slim
+RUN apt-get update && apt-get install -y postgresql-client
+WORKDIR /app
+COPY elt_script.py .
+CMD ["python", "elt_script.py"]</code></pre>
+    <div class="mental">PostgreSQL client tools are installed because the container needs <code>pg_isready</code>, <code>pg_dump</code>, and <code>psql</code>.</div>
+  </section>
+
+  <section class="lab-step" data-step="9">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 9</span><h2>Build the ELT image</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>docker compose build elt_script
+docker images</code></pre>
+    <div class="mental">Dockerfile + elt_script.py → image.</div>
+  </section>
+
+  <section class="lab-step" data-step="10">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 10</span><h2>Read the Python ELT control flow</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links"><a href="https://github.com/abed-dvp/data-engineering-course/blob/main/elt_script/elt_script.py" target="_blank">elt_script.py ↗</a></div>
+    <pre><code>1. read env
+2. wait for source
+3. wait for destination
+4. pg_dump source
+5. psql load destination
+6. validate row counts
+7. success</code></pre>
+    <div class="mental"><code>subprocess.run(..., check=True)</code> makes external command failures fail the Python process too.</div>
+  </section>
+
+  <section class="lab-step" data-step="11">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 11</span><h2>Run the ELT pipeline</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>docker compose ps
+docker compose up --build --abort-on-container-exit elt_script</code></pre>
+    <p>Look for readiness, <code>pg_dump</code>, <code>psql</code>, row-count validation, and <code>ELT completed successfully.</code></p>
+    <div class="mental">Python coordinates native PostgreSQL tools; it does not copy rows one by one.</div>
+  </section>
+
+  <section class="lab-step" data-step="12">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 12</span><h2>Validate the destination yourself</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>docker exec -it destination_postgres psql -U postgres -d destination_db
+
+\dt
+SELECT COUNT(*) AS users_loaded FROM users;
+SELECT COUNT(*) AS orders_loaded FROM orders;
+
+SELECT SUM(amount) AS paid_revenue
+FROM orders
+WHERE status = 'paid';
+
+SELECT COUNT(*) - COUNT(DISTINCT order_id)
+AS duplicate_order_ids
+FROM orders;
+
+\q</code></pre>
+    <p>Baseline: 5 users, 8 orders, paid revenue = <strong>1145.00</strong>, duplicate IDs = <strong>0</strong>.</p>
+  </section>
+
+  <section class="lab-step" data-step="13">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 13</span><h2>Change the source and prove data movement</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>docker exec -it source_postgres psql -U postgres -d source_db
+
+INSERT INTO users (full_name, email, country)
+VALUES ('Practice User', 'practice@example.com', 'Germany');
+
+INSERT INTO orders (user_id, order_date, amount, status)
+SELECT user_id, CURRENT_DATE, 99.00, 'paid'
+FROM users
+WHERE email = 'practice@example.com';
+
+\q
+
+docker compose up --build --abort-on-container-exit elt_script</code></pre>
+    <p>Then query the destination and confirm the new user/order arrived.</p>
+    <div class="mental">This proves the pipeline actually moves changed data, not merely that the containers start.</div>
+  </section>
+
+  <section class="lab-step" data-step="14">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 14</span><h2>Reset and understand init.sql</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>docker compose down -v
+docker compose up -d source_postgres destination_postgres
+
+docker exec -it source_postgres psql -U postgres -d source_db -c "SELECT COUNT(*) FROM users;"
+
+docker compose up --build --abort-on-container-exit elt_script</code></pre>
+    <div class="mental">Removing volumes gives PostgreSQL a fresh data directory, so <code>init.sql</code> runs again.</div>
+  </section>
+
+  <section class="lab-step" data-step="15">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 15</span><h2>Install and configure dbt</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links"><a href="https://github.com/abed-dvp/data-engineering-course/blob/main/dbt_project/profiles.yml.example" target="_blank">profiles.yml.example ↗</a></div>
+    <pre><code># PowerShell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install dbt-postgres
+
+New-Item -ItemType Directory -Force "$HOME\.dbt"
+Copy-Item .\dbt_project\profiles.yml.example "$HOME\.dbt\profiles.yml"
+
+.\.venv\Scripts\dbt.exe --version</code></pre>
+    <div class="mental">dbt runs on your host, so it connects to destination through <code>localhost:5434</code>.</div>
+  </section>
+
+  <section class="lab-step" data-step="16">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 16</span><h2>dbt debug and run</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links">
+      <a href="https://github.com/abed-dvp/data-engineering-course/blob/main/dbt_project/models/sources.yml" target="_blank">sources.yml ↗</a>
+      <a href="https://github.com/abed-dvp/data-engineering-course/blob/main/dbt_project/models/staging/stg_users.sql" target="_blank">stg_users.sql ↗</a>
+      <a href="https://github.com/abed-dvp/data-engineering-course/blob/main/dbt_project/models/staging/stg_orders.sql" target="_blank">stg_orders.sql ↗</a>
+    </div>
+    <pre><code>cd dbt_project
+..\.venv\Scripts\dbt.exe debug
+..\.venv\Scripts\dbt.exe run</code></pre>
+    <div class="mental"><code>source()</code> points to raw external tables. <code>ref()</code> points to another dbt model and creates lineage.</div>
+  </section>
+
+  <section class="lab-step" data-step="17">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 17</span><h2>Inspect staging and the customer mart</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links"><a href="https://github.com/abed-dvp/data-engineering-course/blob/main/dbt_project/models/marts/customer_revenue.sql" target="_blank">customer_revenue.sql ↗</a></div>
+    <pre><code>docker exec -it destination_postgres psql -U postgres -d destination_db
+
+\dt analytics.*
+\dv analytics.*
+
+SELECT * FROM analytics.stg_users ORDER BY user_id;
+SELECT * FROM analytics.customer_revenue ORDER BY user_id;
+
+\q</code></pre>
+    <div class="mental">Raw orders = one row per order. <code>customer_revenue</code> = one row per customer. That is a grain change.</div>
+  </section>
+
+  <section class="lab-step" data-step="18">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 18</span><h2>Run dbt tests</h2></div><button class="lab-check">Mark complete</button></div>
+    <pre><code>..\.venv\Scripts\dbt.exe test</code></pre>
+    <p>Tests cover key assumptions such as uniqueness, non-null keys, and relationships between orders and users.</p>
+    <div class="mental"><code>dbt run</code> asks "can models build?" · <code>dbt test</code> asks "are the modeled data assumptions true?"</div>
+  </section>
+
+  <section class="lab-step" data-step="19">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 19</span><h2>Break dbt on purpose and debug it</h2></div><button class="lab-check">Mark complete</button></div>
+    <p>Temporarily change <code>ref('stg_orders')</code> to <code>ref('stg_orderz')</code> in <code>customer_revenue.sql</code>.</p>
+    <pre><code>..\.venv\Scripts\dbt.exe run
+
+# from repository root:
+git diff -- dbt_project/models/marts/customer_revenue.sql
+git restore dbt_project/models/marts/customer_revenue.sql</code></pre>
+    <div class="mental">Failure → read evidence → identify broken dependency → restore → rerun. No random debugging.</div>
+  </section>
+
+  <section class="lab-step" data-step="20">
+    <div class="lab-meta"><div><span class="lab-badge">STEP 20</span><h2>Understand Cron and Airflow orchestration</h2></div><button class="lab-check">Mark complete</button></div>
+    <div class="file-links">
+      <a href="https://github.com/abed-dvp/data-engineering-course/blob/main/orchestration/cron/run_elt.sh" target="_blank">run_elt.sh ↗</a>
+      <a href="https://github.com/abed-dvp/data-engineering-course/blob/main/orchestration/airflow/elt_dag.py" target="_blank">elt_dag.py ↗</a>
+    </div>
+    <pre><code># Cron wrapper (Git Bash / WSL / macOS / Linux)
+bash orchestration/cron/run_elt.sh
+
+# Syntax-check Airflow DAG
+py -m py_compile orchestration/airflow/elt_dag.py</code></pre>
+    <pre><code>elt >> dbt_run >> dbt_test</code></pre>
+    <div class="mental">Cron = simple time-based scheduling. Airflow = explicit task graph, retries, history, and orchestration. This repo contains a DAG example, not a complete local Airflow deployment.</div>
+  </section>
+
+  <section class="takeaway">
+    <p class="eyebrow">FINAL CHALLENGE — NO GUIDE</p>
+    <p>Reset with <code>docker compose down -v</code>, close this page, and rebuild the flow from memory:</p>
+    <pre><code>1. Create .env
+2. Start source + destination
+3. Inspect source
+4. Build ELT
+5. Run ELT
+6. Validate destination
+7. Configure dbt
+8. dbt debug
+9. dbt run
+10. dbt test
+11. Query customer_revenue
+12. Explain Cron/Airflow</code></pre>
+    <p><strong>Mastery:</strong> you should be able to explain ELT vs ETL, service-name networking, volumes, pg_dump/psql, validation, dbt source/ref, grain, tests, and orchestration without notes.</p>
+  </section>
+</div>
+</main>
+
+<script>
+const key='data-engineering-practical-lab-v1';
+let completed=new Set(JSON.parse(localStorage.getItem(key)||'[]'));
+const steps=[...document.querySelectorAll('.lab-step')];
+function save(){localStorage.setItem(key,JSON.stringify([...completed]))}
+function render(){
+  steps.forEach(el=>{
+    const n=Number(el.dataset.step),done=completed.has(n);
+    el.classList.toggle('done',done);
+    const b=el.querySelector('.lab-check');
+    b.classList.toggle('done',done);
+    b.textContent=done?'✓ Complete':'Mark complete';
+  });
+  document.getElementById('labProgressText').textContent=completed.size+' / '+steps.length+' complete';
+  document.getElementById('labProgressBar').style.width=(completed.size/steps.length*100)+'%';
+}
+document.querySelectorAll('.lab-check').forEach(btn=>btn.onclick=()=>{
+  const n=Number(btn.closest('.lab-step').dataset.step);
+  completed.has(n)?completed.delete(n):completed.add(n);save();render();
+});
+document.getElementById('resetLab').onclick=()=>{if(confirm('Reset practical lab progress?')){completed.clear();save();render()}};
+document.getElementById('themeButton').onclick=()=>{const d=document.documentElement.dataset.theme==='dark';document.documentElement.dataset.theme=d?'light':'dark';localStorage.setItem('de-theme-v2',d?'light':'dark')};
+document.documentElement.dataset.theme=localStorage.getItem('de-theme-v2')||'light';
+render();
+</script>
+</body>
+</html>
