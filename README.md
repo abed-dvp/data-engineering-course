@@ -11,6 +11,8 @@ This repository follows the learning sequence of freeCodeCamp / Justin Chau's **
 > 🚀 **Launch the interactive Codelab:** https://abed-dvp.github.io/data-engineering-course/  
 > 🎥 **Source video:** https://www.youtube.com/watch?v=PHsC_t0j1dU  
 > 🧪 **Runnable project:** the files in this repository
+> 🧭 **Step-by-step Practical Lab:** [PRACTICE.md](./PRACTICE.md)
+> ✅ **Interactive Practical Lab:** https://abed-dvp.github.io/data-engineering-course/codelab/practice.html
 
 ---
 
